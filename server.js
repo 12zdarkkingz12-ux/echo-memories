@@ -169,11 +169,11 @@ passport.deserializeUser(async (id, done) => {
 
 // ========================= Routes =========================
 
+// ✅ تم إصلاحه: استعلام بسيط بدون chapters(count)
 app.get('/', async (req, res, next) => {
   try {
-    // ✨ إضافة chapters(count) لبطاقات الروايات الجديدة
     const { data: novels, error } = await supabase
-      .from('novels').select('*, users(username), chapters(count)').order('created_at', { ascending: false });
+      .from('novels').select('*, users(username)').order('created_at', { ascending: false });
     if (error) throw error;
     res.render('index', { novels: novels || [] });
   } catch (err) {
@@ -215,7 +215,6 @@ app.get('/novel/:id', async (req, res, next) => {
   }
 });
 
-// باقي الراوتات كما هي في نسختك المصلحة (read, comment, dashboard, admin...)
 app.get('/read/:novelId/:chapterId', async (req, res, next) => {
   try {
     const novelId = parseInt(req.params.novelId);
