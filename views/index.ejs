@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO -->
+    <title>Echo Memories · صدى الذكريات</title>
+    <meta name="description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="<%= siteUrl %>/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
+    <meta property="og:title" content="Echo Memories · صدى الذكريات">
+    <meta property="og:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+    <meta property="og:url" content="<%= siteUrl %>/">
+    <meta property="og:locale" content="ar_SA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Echo Memories · صدى الذكريات">
+    <meta name="twitter:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+
+    <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+</head>
+<body>
+    <header>
+        <div class="logo">📖 Echo Memories</div>
+        <nav>
+            <% if (user) { %>
+                <span><%= user.username %> [<%= user.role %>]</span>
+                <a href="/dashboard">لوحتي</a>
+                <a href="/logout">خروج</a>
+            <% } else { %>
+                <a href="/auth/discord" class="discord-btn">دخول بديسكورد</a>
+            <% } %>
+            <button id="theme-switch">🌙/☀️</button>
+        </nav>
+    </header>
+    <main>
+        <h1>أحدث الروايات</h1>
+        <div class="novels-grid">
+            <% if (novels && novels.length) { %>
+                <% novels.forEach(novel => { %>
+                    <div class="novel-card">
+                        <h2><a href="/novel/<%= novel.id %>"><%= novel.title %></a></h2>
+                        <p class="author">✍️ <%= novel.users ? novel.users.username : 'مجهول' %></p>
+                        <small>📅 <%= new Date(novel.created_at).toLocaleDateString('ar') %></small>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>ولا رواية؟ يمكن انت تكتب الأولى.</p>
+            <% } %>
+        </div>
+    </main>
+    <footer>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
+        <p>صنع <span class="gold">Dark</span></p>
+    </footer>
+    <script src="/script.js?v=<%= assetVersion %>"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO -->
+    <title><%= novel.title %> · Echo Memories</title>
+    <meta name="description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="<%= siteUrl %>/novel/<%= novel.id %>">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="book">
+    <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
+    <meta property="og:title" content="<%= novel.title %> · Echo Memories">
+    <meta property="og:description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
+    <meta property="og:url" content="<%= siteUrl %>/novel/<%= novel.id %>">
+    <meta property="og:locale" content="ar_SA">
+    <% if (novel.cover_image) { %>
+    <meta property="og:image" content="<%= novel.cover_image %>">
+    <meta property="og:image:alt" content="غلاف رواية <%= novel.title %>">
+    <% } %>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="<%= novel.cover_image ? 'summary_large_image' : 'summary' %>">
+    <meta name="twitter:title" content="<%= novel.title %> · Echo Memories">
+    <meta name="twitter:description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
+    <% if (novel.cover_image) { %>
+    <meta name="twitter:image" content="<%= novel.cover_image %>">
+    <% } %>
+
+    <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+</head>
+<body>
+    <header>
+        <div class="logo">📖 Echo Memories</div>
+        <nav>
+            <% if (user) { %><span><%= user.username %></span><a href="/dashboard">لوحتي</a><a href="/logout">خروج</a><% } else { %><a href="/auth/discord">دخول</a><% } %>
+            <a href="/">الرئيسية</a>
+            <button id="theme-switch">🌙/☀️</button>
+        </nav>
+    </header>
+    <main>
+        <div class="novel-header">
+            <% if (novel.cover_image) { %>
+                <img src="<%= novel.cover_image %>" alt="غلاف <%= novel.title %>" class="novel-cover">
+            <% } %>
+            <h1><%= novel.title %></h1>
+            <p>✍️ <%= novel.users ? novel.users.username : 'مؤلف' %></p>
+            <p>📂 <%= novel.category || 'بدون تصنيف' %></p>
+        </div>
+        <div class="chapters-list">
+            <h3>الفصول</h3>
+            <% if (chapters && chapters.length) { %>
+                <ul>
+                    <% chapters.forEach(ch => { %>
+                        <li><a href="/read/<%= novel.id %>/<%= ch.id %>">الفصل <%= ch.chapter_number %>: <%= ch.title %></a></li>
+                    <% }); %>
+                </ul>
+                <% if ((!user || user.role === 'ضيف') && allChaptersCount > 4) { %>
+                    <p class="lock">🔒 أول 4 فصول مجانية. سجل عشان تكمل القراءة وتعلق.</p>
+                <% } %>
+            <% } else { %>
+                <p>ما نزلت فصول بعد... يمكن غداً.</p>
+            <% } %>
+        </div>
+    </main>
+    <footer>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
+        <p>صنع <span class="gold">Dark</span></p>
+    </footer>
+    <script src="/script.js?v=<%= assetVersion %>"></script>
+</body>
+</html>
