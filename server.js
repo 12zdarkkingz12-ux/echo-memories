@@ -169,7 +169,6 @@ passport.deserializeUser(async (id, done) => {
 
 // ========================= Routes =========================
 
-// ✅ تم إصلاحه: استعلام بسيط بدون chapters(count)
 app.get('/', async (req, res, next) => {
   try {
     const { data: novels, error } = await supabase
