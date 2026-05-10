@@ -11,9 +11,11 @@ const csrf = require('csurf');
 const sanitizeHtml = require('sanitize-html');
 
 const app = express();
+
+// ========================= تهيئة Supabase =========================
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-// ========================= Security Headers =========================
+// ========================= إعدادات الأمان =========================
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -26,7 +28,7 @@ app.use(helmet({
   },
 }));
 
-// ========================= Rate Limiting =========================
+// ========================= محددات الطلبات =========================
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -45,13 +47,14 @@ const generalLimiter = rateLimit({
 
 app.use(generalLimiter);
 
-// ========================= Core Middleware =========================
+// ========================= البرمجيات الوسيطة الأساسية =========================
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// ========================= الجلسات =========================
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -64,12 +67,12 @@ app.use(session({
   }
 }));
 
+// ========================= Passport =========================
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ========================= CSRF =========================
 const csrfProtection = csrf({ cookie: false });
-
 app.use((req, res, next) => {
   if (req.path.startsWith('/auth/')) return next();
   csrfProtection(req, res, next);
@@ -84,7 +87,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ========================= Helpers =========================
+// ========================= مساعدات =========================
 function sanitizeContent(raw) {
   const cleaned = sanitizeHtml(raw, { allowedTags: [], allowedAttributes: {} });
   return cleaned.replace(/\n/g, '<br>');
@@ -139,9 +142,7 @@ passport.use(new DiscordStrategy({
         .insert([{
           discord_id: profile.id,
           username: profile.username,
-          avatar: profile.avatar
-            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-            : null,
+          avatar: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null,
           role: 'عضو'
         }])
         .select().single();
@@ -155,11 +156,9 @@ passport.use(new DiscordStrategy({
 }));
 
 passport.serializeUser((user, done) => done(null, user.id));
-
 passport.deserializeUser(async (id, done) => {
   try {
-    const { data: user, error } = await supabase
-      .from('users').select('*').eq('id', id).single();
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', id).single();
     if (error) return done(error, null);
     done(null, user || null);
   } catch (err) {
@@ -167,8 +166,9 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// ========================= Routes =========================
+// ========================= الصفحات =========================
 
+// الرئيسية
 app.get('/', async (req, res, next) => {
   try {
     const { data: novels, error } = await supabase
@@ -180,71 +180,50 @@ app.get('/', async (req, res, next) => {
   }
 });
 
+// صفحة الرواية
 app.get('/novel/:id', async (req, res, next) => {
   try {
     const novelId = parseInt(req.params.id);
     if (isNaN(novelId)) return res.status(400).send('معرف غلط');
-
     const { data: novel, error } = await supabase
       .from('novels').select('*, users(username)').eq('id', novelId).single();
     if (error || !novel) return res.status(404).render('404');
-
     const { data: chapters } = await supabase
-      .from('chapters').select('*').eq('novel_id', novelId)
-      .order('chapter_number', { ascending: true });
-
+      .from('chapters').select('*').eq('novel_id', novelId).order('chapter_number', { ascending: true });
     const { data: comments } = await supabase
       .from('comments').select('*, users(username, avatar)')
       .eq('target_type', 'novel').eq('target_id', novelId)
       .eq('is_deleted', false).order('created_at', { ascending: false });
-
     let visibleChapters = chapters || [];
-    if (!req.user || req.user.role === 'ضيف') {
-      visibleChapters = (chapters || []).slice(0, 4);
-    }
-
-    res.render('novel', {
-      novel,
-      chapters: visibleChapters,
-      allChaptersCount: chapters?.length || 0,
-      comments: comments || []
-    });
+    if (!req.user || req.user.role === 'ضيف') visibleChapters = (chapters || []).slice(0, 4);
+    res.render('novel', { novel, chapters: visibleChapters, allChaptersCount: chapters?.length || 0, comments: comments || [] });
   } catch (err) {
     next(err);
   }
 });
 
+// قراءة فصل
 app.get('/read/:novelId/:chapterId', async (req, res, next) => {
   try {
     const novelId = parseInt(req.params.novelId);
     const chapterId = parseInt(req.params.chapterId);
     if (isNaN(novelId) || isNaN(chapterId)) return res.status(400).send('معرف غلط');
-
     const { data: chapter, error } = await supabase
       .from('chapters').select('*, novels(title, id)').eq('id', chapterId).single();
     if (error || !chapter) return res.status(404).render('404');
-
     if ((!req.user || req.user.role === 'ضيف') && chapter.chapter_number > 4) {
       return res.status(403).send('أول 4 فصول مجانية، سجل عشان تكمل.');
     }
-
     const { data: comments } = await supabase
       .from('comments').select('*, users(username, avatar)')
       .eq('target_type', 'chapter').eq('target_id', chapterId)
       .eq('is_deleted', false).order('created_at', { ascending: false });
-
     const { data: prevChapter } = await supabase
       .from('chapters').select('id, chapter_number, title')
-      .eq('novel_id', novelId)
-      .eq('chapter_number', chapter.chapter_number - 1)
-      .maybeSingle();
-
+      .eq('novel_id', novelId).eq('chapter_number', chapter.chapter_number - 1).maybeSingle();
     const { data: nextChapter } = await supabase
       .from('chapters').select('id, chapter_number, title')
-      .eq('novel_id', novelId)
-      .eq('chapter_number', chapter.chapter_number + 1)
-      .maybeSingle();
-
+      .eq('novel_id', novelId).eq('chapter_number', chapter.chapter_number + 1).maybeSingle();
     const safeContent = sanitizeContent(chapter.content);
     res.render('read', { chapter, safeContent, comments: comments || [], prevChapter, nextChapter });
   } catch (err) {
@@ -252,6 +231,7 @@ app.get('/read/:novelId/:chapterId', async (req, res, next) => {
   }
 });
 
+// إضافة تعليق
 app.post('/comment', async (req, res, next) => {
   try {
     if (!req.user) return res.status(401).send('سجل دخولك');
@@ -262,11 +242,7 @@ app.post('/comment', async (req, res, next) => {
     const cleanContent = validateComment(content);
     if (!cleanContent) return res.status(400).send('التعليق إما فاضي أو يتجاوز 2000 حرف');
     const { error } = await supabase.from('comments').insert([{
-      user_id: req.user.id,
-      target_type,
-      target_id: targetId,
-      content: cleanContent,
-      created_at: new Date()
+      user_id: req.user.id, target_type, target_id: targetId, content: cleanContent, created_at: new Date()
     }]);
     if (error) throw error;
     res.redirect('back');
@@ -275,15 +251,14 @@ app.post('/comment', async (req, res, next) => {
   }
 });
 
+// حذف تعليق
 app.post('/comment/delete/:id', async (req, res, next) => {
   try {
     if (!req.user) return res.status(401).send('سجل دخولك');
     const commentId = parseInt(req.params.id);
     if (isNaN(commentId)) return res.status(400).send('معرف غلط');
-
     const { data: comment } = await supabase.from('comments').select('*').eq('id', commentId).single();
     if (!comment) return res.status(404).send('ما فيه تعليق');
-
     let isAuthor = false;
     if (comment.target_type === 'novel') {
       const { data: novel } = await supabase.from('novels').select('author_id').eq('id', comment.target_id).single();
@@ -293,26 +268,17 @@ app.post('/comment/delete/:id', async (req, res, next) => {
       const { data: novel } = await supabase.from('novels').select('author_id').eq('id', chap?.novel_id).single();
       isAuthor = novel?.author_id === req.user.id;
     }
-
-    const canDelete =
-      req.user.role === 'مطور' ||
-      req.user.role === 'مشرف' ||
-      (req.user.role === 'مؤلف_أسطوري' && isAuthor);
-
+    const canDelete = req.user.role === 'مطور' || req.user.role === 'مشرف' || (req.user.role === 'مؤلف_أسطوري' && isAuthor);
     if (!canDelete) return res.status(403).send('ما لك صلاحية تحذف هذا التعليق');
-
-    const { error } = await supabase
-      .from('comments')
-      .update({ is_deleted: true, deleted_by: req.user.id, deleted_at: new Date() })
-      .eq('id', commentId);
+    const { error } = await supabase.from('comments').update({ is_deleted: true, deleted_by: req.user.id, deleted_at: new Date() }).eq('id', commentId);
     if (error) throw error;
-
     res.redirect('back');
   } catch (err) {
     next(err);
   }
 });
 
+// لوحة التحكم
 app.get('/dashboard', checkRole('مؤلف'), async (req, res, next) => {
   try {
     if (req.user.role === 'مطور' || req.user.role === 'مشرف') {
@@ -328,6 +294,7 @@ app.get('/dashboard', checkRole('مؤلف'), async (req, res, next) => {
   }
 });
 
+// إضافة فصل جديد
 app.post('/chapter/new', checkRole('مؤلف'), async (req, res, next) => {
   try {
     const errors = validateChapter(req.body);
@@ -338,10 +305,7 @@ app.post('/chapter/new', checkRole('مؤلف'), async (req, res, next) => {
       return res.status(403).send('هذي الرواية مو ملكك');
     }
     const { error } = await supabase.from('chapters').insert([{
-      novel_id: parseInt(novel_id),
-      chapter_number: parseInt(chapter_number),
-      title: title.trim(),
-      content: content.trim()
+      novel_id: parseInt(novel_id), chapter_number: parseInt(chapter_number), title: title.trim(), content: content.trim()
     }]);
     if (error) throw error;
     res.redirect(`/novel/${novel_id}`);
@@ -350,16 +314,14 @@ app.post('/chapter/new', checkRole('مؤلف'), async (req, res, next) => {
   }
 });
 
+// إنشاء رواية جديدة (مشرف)
 app.post('/novel/new', checkRole('مشرف'), async (req, res, next) => {
   try {
     const { title, author_id, category, cover_image } = req.body;
     if (!title || title.trim().length < 2) return res.status(400).send('العنوان مطلوب');
     if (!isValidUUID(author_id)) return res.status(400).send('معرف المؤلف غلط — يجب أن يكون UUID صالح');
     const { error } = await supabase.from('novels').insert([{
-      title: title.trim(),
-      author_id,
-      category: category?.trim() || null,
-      cover_image: cover_image?.trim() || null
+      title: title.trim(), author_id, category: category?.trim() || null, cover_image: cover_image?.trim() || null
     }]);
     if (error) throw error;
     res.redirect('/dashboard');
@@ -368,13 +330,12 @@ app.post('/novel/new', checkRole('مشرف'), async (req, res, next) => {
   }
 });
 
-// ========================= Auth Routes =========================
+// ========================= مسارات المصادقة =========================
 app.get('/auth/discord', authLimiter, passport.authenticate('discord'));
 app.get('/auth/discord/callback', authLimiter,
   passport.authenticate('discord', { failureRedirect: '/?auth=failed' }),
   (req, res) => res.redirect('/')
 );
-
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -383,16 +344,15 @@ app.get('/logout', (req, res, next) => {
 });
 
 // ========================= 404 =========================
-app.use((req, res) => {
-  res.status(404).render('404');
-});
+app.use((req, res) => res.status(404).render('404'));
 
-// ========================= Error Handler =========================
+// ========================= معالج الأخطاء =========================
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') return res.status(403).send('الطلب مو شرعي، حاول مرة ثانية.');
   console.error('Server error:', err.message || err);
   res.status(500).send('صار خطأ في الخادم، نعتذر. حاول مرة ثانية.');
 });
 
+// ========================= تشغيل =========================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Echo Memories تعيش على http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Echo Memories تعيش على http://localhost:${PORT}`));
