@@ -3,31 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- SEO -->
     <title><%= chapter.title %> · Echo Memories</title>
     <meta name="description" content="اقرأ الفصل <%= chapter.chapter_number %>: <%= chapter.title %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %> على Echo Memories">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
-
-    <!-- Open Graph -->
+    <link rel="icon" type="image/png" href="/logo.png">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
     <meta property="og:title" content="<%= chapter.title %> · Echo Memories">
     <meta property="og:description" content="الفصل <%= chapter.chapter_number %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %>">
     <meta property="og:url" content="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
     <meta property="og:locale" content="ar_SA">
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="<%= chapter.title %> · Echo Memories">
     <meta name="twitter:description" content="الفصل <%= chapter.chapter_number %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %>">
-
     <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
     <header>
-        <div class="logo">📖 Echo Memories</div>
+        <div class="logo">
+            <img src="/logo.png" alt="Echo Memories">
+            <span>Echo Memories</span>
+        </div>
         <nav>
             <% if (user) { %><span><%= user.username %></span><a href="/dashboard">لوحتي</a><a href="/logout">خروج</a><% } else { %><a href="/auth/discord">دخول</a><% } %>
             <a href="/">الرئيسية</a>
@@ -40,14 +37,11 @@
     <main class="reading">
         <div class="chapter-container">
             <h1><%= chapter.title %></h1>
-            <%# ✅ safeContent منظف من XSS مسبقاً في الـ server — نستخدم <%- بأمان %>
             <div class="chapter-content"><%- safeContent %></div>
             <div class="font-control">
                 <button id="fontPlus">🔍 تكبير الخط</button>
                 <button id="fontMinus">🔍 تصغير الخط</button>
             </div>
-
-            <!-- تنقل الفصول -->
             <div class="chapter-nav">
                 <% if (prevChapter) { %>
                     <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= prevChapter.id %>" class="nav-btn">← الفصل السابق</a>
@@ -64,12 +58,10 @@
                 <% } %>
             </div>
         </div>
-
         <div class="comments-section">
             <h3>التعليقات</h3>
             <% if (user) { %>
                 <form action="/comment" method="POST">
-                    <%# ✅ CSRF Token — حماية من الطلبات المزيفة %>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <input type="hidden" name="target_type" value="chapter">
                     <input type="hidden" name="target_id" value="<%= chapter.id %>">
@@ -101,8 +93,8 @@
         </div>
     </main>
     <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
-        <p>صنع <span class="gold">Dark</span></p>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
+        <p>صنع <span style="color: var(--primary);">Dark</span></p>
     </footer>
     <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>

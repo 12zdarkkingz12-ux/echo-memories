@@ -6,17 +6,21 @@
     <title>404 · الصفحة مو موجودة · Echo Memories</title>
     <meta name="robots" content="noindex">
     <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+    <link rel="icon" type="image/png" href="/logo.png">
     <style>
         .not-found { text-align:center; padding: 6rem 1rem; }
-        .not-found .code { font-size:6rem; font-weight:bold; color:var(--gold-dim); line-height:1; }
-        .not-found h2 { font-size:1.6rem; margin:1rem 0 0.5rem; color:var(--gold); }
+        .not-found .code { font-size:6rem; font-weight:bold; color:var(--primary-dim); line-height:1; }
+        .not-found h2 { font-size:1.6rem; margin:1rem 0 0.5rem; color:var(--primary); }
         .not-found p { color:var(--text); opacity:0.7; margin-bottom:2rem; }
         .not-found .actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo">📖 Echo Memories</div>
+        <div class="logo">
+            <img src="/logo.png" alt="Echo Memories">
+            <span>Echo Memories</span>
+        </div>
         <nav>
             <% if (user) { %>
                 <span><%= user.username %></span>
@@ -34,15 +38,16 @@
             <div class="code">404</div>
             <h2>الصفحة اللي تبحث عنها ضاعت</h2>
             <p>يمكن الرابط غلط، أو الصفحة اتحذفت، أو ما كانت موجودة أصلاً.</p>
+            <p style="color: var(--primary); margin-top: 1rem;">حتى الذكريات أحياناً تضيع... هذه الصفحة ضاعت بعد</p>
             <div class="actions">
-                <a href="/" class="nav-btn">🏠 الرئيسية</a>
+                <a href="/" class="nav-btn">الرئيسية</a>
                 <a href="javascript:history.back()" class="nav-btn">← ارجع للخلف</a>
             </div>
         </div>
     </main>
     <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
-        <p>صنع <span class="gold">Dark</span></p>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
+        <p>صنع <span style="color: var(--primary);">Dark</span></p>
     </footer>
     <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>

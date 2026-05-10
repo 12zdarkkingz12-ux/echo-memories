@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <title>لوحة الإدارة · Echo Memories</title>
     <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+    <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
     <header>
-        <div class="logo">📖 Echo Memories</div>
+        <div class="logo">
+            <img src="/logo.png" alt="Echo Memories">
+            <span>Echo Memories</span>
+        </div>
         <nav>
             <span><%= user.username %> [<%= user.role %>]</span>
             <a href="/">الرئيسية</a>
@@ -17,10 +21,8 @@
     </header>
     <main>
         <h1>لوحة الإدارة</h1>
-
         <h3>إنشاء رواية جديدة</h3>
         <form action="/novel/new" method="POST" class="form-card">
-            <%# ✅ CSRF Token %>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="text" name="title" placeholder="عنوان الرواية" required maxlength="200">
             <input type="text" name="author_id" placeholder="UUID المؤلف" required>
@@ -28,8 +30,7 @@
             <input type="text" name="cover_image" placeholder="رابط صورة الغلاف (اختياري)">
             <button type="submit">إنشاء الرواية</button>
         </form>
-
-        <hr style="margin: 2rem 0; border-color: var(--gold-dim);">
+        <hr style="margin: 2rem 0; border-color: var(--primary-dim);">
         <h3>كل الروايات</h3>
         <% if (novels && novels.length) { %>
             <ul>
@@ -45,8 +46,8 @@
         <% } %>
     </main>
     <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
-        <p>صنع <span class="gold">Dark</span></p>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
+        <p>صنع <span style="color: var(--primary);">Dark</span></p>
     </footer>
     <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>

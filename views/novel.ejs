@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- SEO -->
     <title><%= novel.title %> · Echo Memories</title>
     <meta name="description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="<%= siteUrl %>/novel/<%= novel.id %>">
-
-    <!-- Open Graph -->
+    <link rel="icon" type="image/png" href="/logo.png">
     <meta property="og:type" content="book">
     <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
     <meta property="og:title" content="<%= novel.title %> · Echo Memories">
@@ -21,20 +18,20 @@
     <meta property="og:image" content="<%= novel.cover_image %>">
     <meta property="og:image:alt" content="غلاف رواية <%= novel.title %>">
     <% } %>
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="<%= novel.cover_image ? 'summary_large_image' : 'summary' %>">
     <meta name="twitter:title" content="<%= novel.title %> · Echo Memories">
     <meta name="twitter:description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
     <% if (novel.cover_image) { %>
     <meta name="twitter:image" content="<%= novel.cover_image %>">
     <% } %>
-
     <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
     <header>
-        <div class="logo">📖 Echo Memories</div>
+        <div class="logo">
+            <img src="/logo.png" alt="Echo Memories">
+            <span>Echo Memories</span>
+        </div>
         <nav>
             <% if (user) { %><span><%= user.username %></span><a href="/dashboard">لوحتي</a><a href="/logout">خروج</a><% } else { %><a href="/auth/discord">دخول</a><% } %>
             <a href="/">الرئيسية</a>
@@ -65,10 +62,45 @@
                 <p>ما نزلت فصول بعد... يمكن غداً.</p>
             <% } %>
         </div>
+        <div class="comments-section">
+            <h3>التعليقات</h3>
+            <% if (user) { %>
+                <form action="/comment" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="target_type" value="novel">
+                    <input type="hidden" name="target_id" value="<%= novel.id %>">
+                    <textarea name="content" placeholder="شاركنا رأيك في الرواية..." maxlength="2000"></textarea>
+                    <button type="submit">أرسل</button>
+                </form>
+            <% } else { %>
+                <p>سجل دخولك عشان تشاركنا رأيك في الرواية.</p>
+            <% } %>
+            <div class="old-comments">
+                <% if (comments && comments.length) { %>
+                    <% comments.forEach(c => { %>
+                        <div class="one-comment">
+                            <strong><%= c.users ? c.users.username : 'مجهول' %></strong>
+                            <p><%= c.content %></p>
+                            <small><%= new Date(c.created_at).toLocaleString('ar') %></small>
+                            <% if (user && (user.role === 'مطور' || user.role === 'مشرف' || user.role === 'مؤلف_أسطوري')) { %>
+                                <div class="comment-actions">
+                                    <form action="/comment/delete/<%= c.id %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <button type="submit" class="delete-comment">🗑️ حذف</button>
+                                    </form>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p>ولا تعليق... كن أول من يكتب.</p>
+                <% } %>
+            </div>
+        </div>
     </main>
     <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
-        <p>صنع <span class="gold">Dark</span></p>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
+        <p>صنع <span style="color: var(--primary);">Dark</span></p>
     </footer>
     <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>

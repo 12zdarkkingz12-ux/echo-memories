@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <title>لوحتي · Echo Memories</title>
     <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+    <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
     <header>
-        <div class="logo">📖 Echo Memories</div>
+        <div class="logo">
+            <img src="/logo.png" alt="Echo Memories">
+            <span>Echo Memories</span>
+        </div>
         <nav>
             <span><%= user.username %> [<%= user.role %>]</span>
             <a href="/">الرئيسية</a>
@@ -27,11 +31,9 @@
         <% } else { %>
             <p>ما عندك روايات بعد.</p>
         <% } %>
-
-        <hr style="margin: 2rem 0; border-color: var(--gold-dim);">
+        <hr style="margin: 2rem 0; border-color: var(--primary-dim);">
         <h3>إضافة فصل جديد</h3>
         <form action="/chapter/new" method="POST" class="form-card">
-            <%# ✅ CSRF Token %>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="number" name="novel_id" placeholder="معرف الرواية" required min="1">
             <input type="number" name="chapter_number" placeholder="رقم الفصل" required min="1">
@@ -41,8 +43,8 @@
         </form>
     </main>
     <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" class="gold">صدى الذكريات</a></p>
-        <p>صنع <span class="gold">Dark</span></p>
+        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
+        <p>صنع <span style="color: var(--primary);">Dark</span></p>
     </footer>
     <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>
