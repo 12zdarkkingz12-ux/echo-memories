@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 · الصفحة مو موجودة · Echo Memories</title>
+  <title><%= code %> · خطأ · Echo Memories</title>
   <meta name="robots" content="noindex">
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -12,12 +12,15 @@
   <%- include('header') %>
   <main>
     <div class="error-page">
-      <div class="error-code">404</div>
-      <h2 class="error-title">الصفحة اللي تبحث عنها ضاعت 🌌</h2>
-      <p class="error-msg">
-        حتى الذكريات أحياناً تتلاشى… هذه الصفحة ضاعت بعد.
-        <br>ربما الرابط غلط، أو الصفحة اتحذفت.
-      </p>
+      <div class="error-code"><%= code %></div>
+      <h2 class="error-title">
+        <% if (code == 403) { %>ما عندك صلاحية 🔒
+        <% } else if (code == 401) { %>سجّل دخولك أولاً 👤
+        <% } else if (code == 400) { %>طلب غير صحيح ⚠️
+        <% } else { %>صار خطأ في الخادم 🛠️
+        <% } %>
+      </h2>
+      <p class="error-msg"><%= message %></p>
       <div class="error-actions">
         <a href="/" class="nav-btn nav-center">🏠 الرئيسية</a>
         <a href="javascript:history.back()" class="nav-btn">← ارجع للخلف</a>

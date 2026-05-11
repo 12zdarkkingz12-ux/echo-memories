@@ -1,54 +1,58 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>لوحة الإدارة · Echo Memories</title>
-    <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
-    <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة · Echo Memories</title>
+  <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+  <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <img src="/logo.png" alt="Echo Memories">
-            <span>Echo Memories</span>
+  <%- include('header') %>
+  <main>
+    <h1>⚙️ لوحة الإدارة</h1>
+
+    <section style="margin-bottom:2.5rem;">
+      <h2 class="section-title">🆕 إنشاء رواية جديدة</h2>
+      <form action="/novel/new" method="POST" class="form-card">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="text" name="title" placeholder="عنوان الرواية" required maxlength="200">
+        <input type="text" name="author_id" placeholder="UUID المؤلف" required>
+        <input type="text" name="category" placeholder="التصنيف (اختياري)" maxlength="100">
+        <input type="text" name="cover_image" placeholder="رابط صورة الغلاف (اختياري)">
+        <button type="submit" class="submit-btn">إنشاء الرواية ✨</button>
+      </form>
+    </section>
+
+    <section>
+      <h2 class="section-title">📚 كل الروايات</h2>
+      <% if (novels && novels.length) { %>
+        <div class="novels-list">
+          <% novels.forEach(n => { %>
+            <div class="novel-list-item">
+              <span>📖</span>
+              <div>
+                <a href="/novel/<%= n.id %>"><%= n.title %></a>
+                <small style="color:var(--text-muted);margin-right:8px;">— <%= n.users ? n.users.username : 'بدون مؤلف' %></small>
+              </div>
+            </div>
+          <% }); %>
         </div>
-        <nav>
-            <span><%= user.username %> [<%= user.role %>]</span>
-            <a href="/">الرئيسية</a>
-            <a href="/logout">خروج</a>
-            <button id="theme-switch">🌙/☀️</button>
-        </nav>
-    </header>
-    <main>
-        <h1>لوحة الإدارة</h1>
-        <h3>إنشاء رواية جديدة</h3>
-        <form action="/novel/new" method="POST" class="form-card">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <input type="text" name="title" placeholder="عنوان الرواية" required maxlength="200">
-            <input type="text" name="author_id" placeholder="UUID المؤلف" required>
-            <input type="text" name="category" placeholder="التصنيف (اختياري)" maxlength="100">
-            <input type="text" name="cover_image" placeholder="رابط صورة الغلاف (اختياري)">
-            <button type="submit">إنشاء الرواية</button>
-        </form>
-        <hr style="margin: 2rem 0; border-color: var(--primary-dim);">
-        <h3>كل الروايات</h3>
-        <% if (novels && novels.length) { %>
-            <ul>
-                <% novels.forEach(n => { %>
-                    <li>
-                        <a href="/novel/<%= n.id %>"><%= n.title %></a>
-                        <small>— <%= n.users ? n.users.username : 'بدون مؤلف' %></small>
-                    </li>
-                <% }); %>
-            </ul>
-        <% } else { %>
-            <p>ما فيه روايات بعد.</p>
-        <% } %>
-    </main>
-    <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
-        <p>صنع <span style="color: var(--primary);">Dark</span></p>
-    </footer>
-    <script src="/script.js?v=<%= assetVersion %>"></script>
+      <% } else { %>
+        <div class="empty-state" style="padding:2rem 0;">
+          <span class="empty-icon">🌸</span>
+          <p>ما في روايات بعد.</p>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <footer>
+    <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener">صدى الذكريات</a></p>
+    <p>صنع <span style="color:var(--primary)">Dark</span></p>
+  </footer>
+
+  <button class="back-top" id="backTop" aria-label="العودة لأعلى">↑</button>
+  <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>
 </html>

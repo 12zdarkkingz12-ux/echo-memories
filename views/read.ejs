@@ -1,101 +1,110 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= chapter.title %> · Echo Memories</title>
-    <meta name="description" content="اقرأ الفصل <%= chapter.chapter_number %>: <%= chapter.title %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %> على Echo Memories">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
-    <link rel="icon" type="image/png" href="/logo.png">
-    <meta property="og:type" content="article">
-    <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
-    <meta property="og:title" content="<%= chapter.title %> · Echo Memories">
-    <meta property="og:description" content="الفصل <%= chapter.chapter_number %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %>">
-    <meta property="og:url" content="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
-    <meta property="og:locale" content="ar_SA">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="<%= chapter.title %> · Echo Memories">
-    <meta name="twitter:description" content="الفصل <%= chapter.chapter_number %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %>">
-    <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= chapter.title %> · Echo Memories</title>
+  <meta name="description" content="اقرأ الفصل <%= chapter.chapter_number %>: <%= chapter.title %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %> على Echo Memories">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
+  <meta property="og:title" content="<%= chapter.title %> · Echo Memories">
+  <meta property="og:url" content="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
+  <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <img src="/logo.png" alt="Echo Memories">
-            <span>Echo Memories</span>
+  <%- include('header') %>
+
+  <main class="reading">
+    <div class="chapter-container">
+      <h1><%= chapter.title %></h1>
+      <p class="chapter-breadcrumb">
+        الفصل <%= chapter.chapter_number %>
+        <% if (chapter.novels) { %> · <a href="/novel/<%= chapter.novels.id %>"><%= chapter.novels.title %></a><% } %>
+      </p>
+
+      <div class="chapter-content" id="chapterContent"><%- safeContent %></div>
+
+      <!-- Font Slider -->
+      <div class="font-control">
+        <label for="fontSlider">حجم الخط</label>
+        <input type="range" id="fontSlider" min="13" max="32" value="18" step="1">
+        <span class="font-size-display" id="fontDisplay">18</span>
+      </div>
+
+      <!-- Nav -->
+      <div class="chapter-nav">
+        <% if (prevChapter) { %>
+          <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= prevChapter.id %>" class="nav-btn">← الفصل السابق</a>
+        <% } else { %>
+          <span class="nav-btn disabled">← السابق</span>
+        <% } %>
+        <% if (chapter.novels) { %>
+          <a href="/novel/<%= chapter.novels.id %>" class="nav-btn nav-center">📖 قائمة الفصول</a>
+        <% } %>
+        <% if (nextChapter) { %>
+          <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= nextChapter.id %>" class="nav-btn">الفصل التالي →</a>
+        <% } else { %>
+          <span class="nav-btn disabled">التالي →</span>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="comments-section" style="max-width:780px;margin:0 auto;">
+      <h2 class="section-title">💬 التعليقات</h2>
+      <% if (user) { %>
+        <div class="comment-form">
+          <form action="/comment" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="target_type" value="chapter">
+            <input type="hidden" name="target_id" value="<%= chapter.id %>">
+            <textarea name="content" placeholder="اكتب شي… حتى لو كلمة 💬" maxlength="2000"></textarea>
+            <button type="submit" class="submit-btn">إرسال 📨</button>
+          </form>
         </div>
-        <nav>
-            <% if (user) { %><span><%= user.username %></span><a href="/dashboard">لوحتي</a><a href="/logout">خروج</a><% } else { %><a href="/auth/discord">دخول</a><% } %>
-            <a href="/">الرئيسية</a>
-            <% if (chapter.novels) { %>
-                <a href="/novel/<%= chapter.novels.id %>">← الرواية</a>
-            <% } %>
-            <button id="theme-switch">🌙/☀️</button>
-        </nav>
-    </header>
-    <main class="reading">
-        <div class="chapter-container">
-            <h1><%= chapter.title %></h1>
-            <div class="chapter-content"><%- safeContent %></div>
-            <div class="font-control">
-                <button id="fontPlus">🔍 تكبير الخط</button>
-                <button id="fontMinus">🔍 تصغير الخط</button>
+      <% } else { %>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">سجّل دخولك عشان تشاركنا رأيك.</p>
+      <% } %>
+      <div class="old-comments">
+        <% if (comments && comments.length) { %>
+          <% comments.forEach((c, i) => { %>
+            <div class="one-comment" style="animation-delay:<%= i * 0.07 %>s">
+              <div class="comment-avatar">
+                <% if (c.users && c.users.discord_id && c.users.avatar) { %>
+                  <img src="https://cdn.discordapp.com/avatars/<%= c.users.discord_id %>/<%= c.users.avatar %>.png?size=64" onerror="this.parentElement.textContent='👤'" alt="">
+                <% } else { %>👤<% } %>
+              </div>
+              <div class="comment-body">
+                <strong><%= c.users ? c.users.username : 'مجهول' %></strong>
+                <span class="comment-date"><%= new Date(c.created_at).toLocaleString('ar') %></span>
+                <p><%= c.content %></p>
+                <% if (user && (user.role === 'مطور' || user.role === 'مشرف' || user.role === 'مؤلف_أسطوري')) { %>
+                  <div class="comment-actions">
+                    <form action="/comment/delete/<%= c.id %>" method="POST" style="display:inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button type="submit" class="delete-comment">🗑️ حذف</button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
             </div>
-            <div class="chapter-nav">
-                <% if (prevChapter) { %>
-                    <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= prevChapter.id %>" class="nav-btn">← الفصل السابق</a>
-                <% } else { %>
-                    <span class="nav-btn disabled">← السابق</span>
-                <% } %>
-                <% if (chapter.novels) { %>
-                    <a href="/novel/<%= chapter.novels.id %>" class="nav-btn nav-center">📖 قائمة الفصول</a>
-                <% } %>
-                <% if (nextChapter) { %>
-                    <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= nextChapter.id %>" class="nav-btn">الفصل التالي →</a>
-                <% } else { %>
-                    <span class="nav-btn disabled">التالي →</span>
-                <% } %>
-            </div>
-        </div>
-        <div class="comments-section">
-            <h3>التعليقات</h3>
-            <% if (user) { %>
-                <form action="/comment" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <input type="hidden" name="target_type" value="chapter">
-                    <input type="hidden" name="target_id" value="<%= chapter.id %>">
-                    <textarea name="content" placeholder="اكتب شي... حتى لو كلمة" maxlength="2000"></textarea>
-                    <button type="submit">أرسل</button>
-                </form>
-            <% } else { %>
-                <p>سجل دخولك عشان تشاركنا رأيك.</p>
-            <% } %>
-            <div class="old-comments">
-                <% if (comments && comments.length) { %>
-                    <% comments.forEach(c => { %>
-                        <div class="one-comment">
-                            <strong><%= c.users ? c.users.username : 'مجهول' %></strong>
-                            <p><%= c.content %></p>
-                            <small><%= new Date(c.created_at).toLocaleString('ar') %></small>
-                            <% if (user && (user.role === 'مطور' || user.role === 'مشرف' || user.role === 'مؤلف_أسطوري')) { %>
-                                <form action="/comment/delete/<%= c.id %>" method="POST" style="display:inline;">
-                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                    <button type="submit" class="delete-comment">🗑️ حذف</button>
-                                </form>
-                            <% } %>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p>ولا تعليق... كن أول من يكتب.</p>
-                <% } %>
-            </div>
-        </div>
-    </main>
-    <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
-        <p>صنع <span style="color: var(--primary);">Dark</span></p>
-    </footer>
-    <script src="/script.js?v=<%= assetVersion %>"></script>
+          <% }); %>
+        <% } else { %>
+          <p style="color:var(--text-muted)">ولا تعليق… كن أول من يكتب ✍️</p>
+        <% } %>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener">صدى الذكريات</a></p>
+    <p>صنع <span style="color:var(--primary)">Dark</span></p>
+  </footer>
+
+  <button class="back-top" id="backTop" aria-label="العودة لأعلى">↑</button>
+  <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>
 </html>

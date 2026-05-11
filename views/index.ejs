@@ -1,65 +1,66 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Memories · صدى الذكريات</title>
-    <meta name="description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="<%= siteUrl %>/">
-    <link rel="icon" type="image/png" href="/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
-    <meta property="og:title" content="Echo Memories · صدى الذكريات">
-    <meta property="og:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
-    <meta property="og:url" content="<%= siteUrl %>/">
-    <meta property="og:locale" content="ar_SA">
-    <meta property="og:image" content="<%= siteUrl %>/logo.png">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Echo Memories · صدى الذكريات">
-    <meta name="twitter:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
-    <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Echo Memories · صدى الذكريات</title>
+  <meta name="description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= siteUrl %>/">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
+  <meta property="og:title" content="Echo Memories · صدى الذكريات">
+  <meta property="og:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <meta property="og:url" content="<%= siteUrl %>/">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:image" content="<%= siteUrl %>/logo.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Echo Memories · صدى الذكريات">
+  <meta name="twitter:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <img src="/logo.png" alt="Echo Memories">
-            <span>Echo Memories</span>
-        </div>
-        <nav>
-            <% if (user) { %>
-                <span><%= user.username %> [<%= user.role %>]</span>
-                <a href="/dashboard">لوحتي</a>
-                <a href="/logout">خروج</a>
-            <% } else { %>
-                <a href="/auth/discord" class="discord-btn">دخول بديسكورد</a>
-            <% } %>
-            <button id="theme-switch">🌙/☀️</button>
-        </nav>
-    </header>
-    <main>
-        <h1>أحدث الروايات</h1>
-        <div class="novels-grid">
-            <% if (novels && novels.length) { %>
-                <% novels.forEach(novel => { %>
-                    <a href="/novel/<%= novel.id %>" class="novel-card"
-                       style="background-image: url('<%= novel.cover_image || '/default-cover.jpg' %>')">
-                        <div class="card-body">
-                            <h2><%= novel.title %></h2>
-                            <p class="author">✍️ <%= novel.users ? novel.users.username : 'مجهول' %></p>
-                            <p class="chapter-count">📖 <%= novel.chapters ? novel.chapters.length : 0 %> فصول</p>
-                        </div>
-                    </a>
-                <% }); %>
-            <% } else { %>
-                <p>ولا رواية؟ يمكن انت تكتب الأولى.</p>
-            <% } %>
-        </div>
-    </main>
-    <footer>
-        <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener" style="color: var(--primary);">صدى الذكريات</a></p>
-        <p>صنع <span style="color: var(--primary);">Dark</span></p>
-    </footer>
-    <script src="/script.js?v=<%= assetVersion %>"></script>
+  <%- include('header') %>
+
+  <main>
+    <section class="hero" id="hero">
+      <h1 class="hero-title">صدى الذكريات 📖</h1>
+      <p class="hero-sub">منصة لنشر الروايات العربية الأصلية — اقرأ قصصاً فريدة كتبها مؤلفون من مجتمعنا</p>
+      <a href="#novels" class="hero-cta">✨ ابدأ القراءة</a>
+    </section>
+
+    <section id="novels">
+      <h2 class="section-title">📚 أحدث الروايات</h2>
+      <div class="novels-grid">
+        <% if (novels && novels.length) { %>
+          <% novels.forEach((novel, i) => { %>
+            <a href="/novel/<%= novel.id %>" class="novel-card"
+               style="background-image:url('<%= novel.cover_image || '/default-cover.jpg' %>');animation-delay:<%= i * 0.08 %>s">
+              <div class="card-body">
+                <h2><%= novel.title %></h2>
+                <p class="author">✍️ <%= novel.users ? novel.users.username : 'مجهول' %></p>
+                <p class="chapter-count">📖 <%= novel.chapters ? novel.chapters.length : 0 %> فصول</p>
+              </div>
+            </a>
+          <% }); %>
+        <% } else { %>
+          <div class="empty-state">
+            <span class="empty-icon">🌸</span>
+            <p>ما في روايات بعد — كن أول من يكتب!</p>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener">صدى الذكريات</a></p>
+    <p>صنع <span style="color:var(--primary)">Dark</span></p>
+  </footer>
+
+  <button class="back-top" id="backTop" aria-label="العودة لأعلى">↑</button>
+
+  <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>
 </html>
