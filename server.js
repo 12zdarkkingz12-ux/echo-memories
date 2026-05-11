@@ -96,10 +96,10 @@ function isValidUUID(str) {
 
 function checkRole(minRole) {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).send('سجل دخولك أولاً');
+    if (!req.user) return res.status(401).render('error', { message: 'سجل دخولك أولاً', code: 401 });
     const roles = ['ضيف', 'عضو', 'مؤلف', 'مؤلف_أسطوري', 'مشرف', 'مطور'];
     if (roles.indexOf(req.user.role) >= roles.indexOf(minRole)) return next();
-    res.status(403).send('ما عندك صلاحية');
+    res.status(403).render('error', { message: 'ما عندك صلاحية لهذه الصفحة', code: 403 });
   };
 }
 
@@ -159,7 +159,7 @@ app.get('/', async (req, res, next) => {
 app.get('/novel/:id', async (req, res, next) => {
   try {
     const novelId = parseInt(req.params.id);
-    if (isNaN(novelId)) return res.status(400).send('معرف غلط');
+    if (isNaN(novelId)) return res.status(400).render('error', { message: 'طلب غير صحيح', code: 400 });
     const { data: novel, error } = await supabase
       .from('novels').select('*, users(username)').eq('id', novelId).single();
     if (error || !novel) return res.status(404).render('404');
@@ -181,12 +181,12 @@ app.get('/read/:novelId/:chapterId', async (req, res, next) => {
   try {
     const novelId = parseInt(req.params.novelId);
     const chapterId = parseInt(req.params.chapterId);
-    if (isNaN(novelId) || isNaN(chapterId)) return res.status(400).send('معرف غلط');
+    if (isNaN(novelId) || isNaN(chapterId)) return res.status(400).render('error', { message: 'طلب غير صحيح', code: 400 });
     const { data: chapter, error } = await supabase
       .from('chapters').select('*, novels(title, id)').eq('id', chapterId).single();
     if (error || !chapter) return res.status(404).render('404');
     if ((!req.user || req.user.role === 'ضيف') && chapter.chapter_number > 4) {
-      return res.status(403).send('أول 4 فصول مجانية، سجل عشان تكمل.');
+      return res.status(403).render('error', { message: 'أول 4 فصول مجانية، سجّل دخولك عشان تكمل القراءة', code: 403 });
     }
     const { data: comments } = await supabase
       .from('comments').select('*, users(username, avatar)')
@@ -207,13 +207,13 @@ app.get('/read/:novelId/:chapterId', async (req, res, next) => {
 
 app.post('/comment', async (req, res, next) => {
   try {
-    if (!req.user) return res.status(401).send('سجل دخولك');
+    if (!req.user) return res.status(401).render('error', { message: 'سجّل دخولك أولاً', code: 401 });
     const { target_type, target_id, content } = req.body;
-    if (!['novel', 'chapter'].includes(target_type)) return res.status(400).send('نوع غلط');
+    if (!['novel', 'chapter'].includes(target_type)) return res.status(400).render('error', { message: 'طلب غير صحيح', code: 400 });
     const targetId = parseInt(target_id);
-    if (isNaN(targetId)) return res.status(400).send('معرف غلط');
+    if (isNaN(targetId)) return res.status(400).render('error', { message: 'طلب غير صحيح', code: 400 });
     const cleanContent = validateComment(content);
-    if (!cleanContent) return res.status(400).send('التعليق إما فاضي أو يتجاوز 2000 حرف');
+    if (!cleanContent) return res.status(400).render('error', { message: 'التعليق إما فاضي أو يتجاوز 2000 حرف', code: 400 });
     const { error } = await supabase.from('comments').insert([{
       user_id: req.user.id, target_type, target_id: targetId, content: cleanContent, created_at: new Date()
     }]);
@@ -226,11 +226,11 @@ app.post('/comment', async (req, res, next) => {
 
 app.post('/comment/delete/:id', async (req, res, next) => {
   try {
-    if (!req.user) return res.status(401).send('سجل دخولك');
+    if (!req.user) return res.status(401).render('error', { message: 'سجّل دخولك أولاً', code: 401 });
     const commentId = parseInt(req.params.id);
-    if (isNaN(commentId)) return res.status(400).send('معرف غلط');
+    if (isNaN(commentId)) return res.status(400).render('error', { message: 'طلب غير صحيح', code: 400 });
     const { data: comment } = await supabase.from('comments').select('*').eq('id', commentId).single();
-    if (!comment) return res.status(404).send('ما فيه تعليق');
+    if (!comment) return res.status(404).render('404');
     let isAuthor = false;
     if (comment.target_type === 'novel') {
       const { data: novel } = await supabase.from('novels').select('author_id').eq('id', comment.target_id).single();
@@ -241,7 +241,7 @@ app.post('/comment/delete/:id', async (req, res, next) => {
       isAuthor = novel?.author_id === req.user.id;
     }
     const canDelete = req.user.role === 'مطور' || req.user.role === 'مشرف' || (req.user.role === 'مؤلف_أسطوري' && isAuthor);
-    if (!canDelete) return res.status(403).send('ما لك صلاحية');
+    if (!canDelete) return res.status(403).render('error', { message: 'ما لك صلاحية للحذف', code: 403 });
     const { error } = await supabase.from('comments').update({
       is_deleted: true, deleted_by: req.user.id, deleted_at: new Date()
     }).eq('id', commentId);
@@ -268,11 +268,11 @@ app.get('/dashboard', checkRole('مؤلف'), async (req, res, next) => {
 app.post('/chapter/new', checkRole('مؤلف'), async (req, res, next) => {
   try {
     const errors = validateChapter(req.body);
-    if (errors.length > 0) return res.status(400).send(errors.join(' | '));
+    if (errors.length > 0) return res.status(400).render('error', { message: errors.join(' | '), code: 400 });
     const { novel_id, chapter_number, title, content } = req.body;
     const { data: novel } = await supabase.from('novels').select('author_id').eq('id', parseInt(novel_id)).single();
     if (!novel || (novel.author_id !== req.user.id && !['مشرف', 'مطور'].includes(req.user.role))) {
-      return res.status(403).send('هذي الرواية مو ملكك');
+      return res.status(403).render('error', { message: 'هذي الرواية مو ملكك', code: 403 });
     }
     const { error } = await supabase.from('chapters').insert([{
       novel_id: parseInt(novel_id), chapter_number: parseInt(chapter_number), title: title.trim(), content: content.trim()
@@ -287,8 +287,8 @@ app.post('/chapter/new', checkRole('مؤلف'), async (req, res, next) => {
 app.post('/novel/new', checkRole('مشرف'), async (req, res, next) => {
   try {
     const { title, author_id, category, cover_image } = req.body;
-    if (!title || title.trim().length < 2) return res.status(400).send('العنوان مطلوب');
-    if (!isValidUUID(author_id)) return res.status(400).send('معرف المؤلف غلط');
+    if (!title || title.trim().length < 2) return res.status(400).render('error', { message: 'عنوان الرواية مطلوب', code: 400 });
+    if (!isValidUUID(author_id)) return res.status(400).render('error', { message: 'معرف المؤلف غير صحيح', code: 400 });
     const { error } = await supabase.from('novels').insert([{
       title: title.trim(), author_id, category: category?.trim() || null, cover_image: cover_image?.trim() || null
     }]);
@@ -303,7 +303,7 @@ app.post('/novel/new', checkRole('مشرف'), async (req, res, next) => {
 app.get('/auth/discord', passport.authenticate('discord'));
 app.get('/auth/discord/callback',
   passport.authenticate('discord', { failureRedirect: '/?auth=failed' }),
-  (req, res) => res.redirect('/')
+  (req, res) => res.redirect('/?welcome=1')
 );
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
@@ -316,7 +316,7 @@ app.get('/logout', (req, res, next) => {
 app.use((req, res) => res.status(404).render('404'));
 app.use((err, req, res, next) => {
   console.error('Server error:', err.message || err);
-  res.status(500).send('صار خطأ في الخادم، نعتذر. حاول مرة ثانية.');
+  res.status(500).render('error', { message: 'صار خطأ في الخادم، نعتذر. حاول مرة ثانية.', code: 500 });
 });
 
 const PORT = process.env.PORT || 3000;
