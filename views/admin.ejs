@@ -3,37 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة الإدارة · Echo Memories</title>
+  <title>لوحة الإدارة · <%= siteName %></title>
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
   <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
   <%- include('header') %>
   <main>
-    <h1>⚙️ لوحة الإدارة</h1>
+    <div class="section-head">
+      <h1>⚙️ لوحة الإدارة</h1>
+      <span class="section-count">إدارة موسّعة</span>
+    </div>
+
+    <section class="stats-grid">
+      <div class="stat-card"><span>الروايات</span><strong><%= stats.novels %></strong></div>
+      <div class="stat-card"><span>المؤلفون</span><strong><%= stats.authors %></strong></div>
+      <div class="stat-card"><span>المستخدمون</span><strong><%= stats.users %></strong></div>
+    </section>
 
     <section style="margin-bottom:2.5rem;">
       <h2 class="section-title">🆕 إنشاء رواية جديدة</h2>
-      <form action="/novel/new" method="POST" class="form-card">
+      <form action="/novel/new" method="POST" class="form-card admin-form">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <input type="text" name="title" placeholder="عنوان الرواية" required maxlength="200">
-        <input type="text" name="author_id" placeholder="UUID المؤلف" required>
-        <input type="text" name="category" placeholder="التصنيف (اختياري)" maxlength="100">
-        <input type="text" name="cover_image" placeholder="رابط صورة الغلاف (اختياري)">
+
+        <div class="mini-grid">
+          <label>
+            <span>طريقة المؤلف</span>
+            <select name="author_mode" id="authorMode">
+              <option value="list">من القائمة</option>
+              <option value="uuid">UUID يدوي</option>
+            </select>
+          </label>
+          <label id="authorPickWrap">
+            <span>قائمة المؤلفين</span>
+            <select name="author_pick" id="authorPick">
+              <option value="">اختر مؤلفًا</option>
+              <% authorChoices.forEach(a => { %>
+                <option value="<%= a.id %>" data-username="<%= a.username %>"><%= a.username %> · <%= a.role %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label id="authorUuidWrap" class="hidden-field">
+            <span>UUID المؤلف</span>
+            <input type="text" name="author_uuid" id="authorUuid" placeholder="UUID">
+          </label>
+        </div>
+
+        <input type="text" name="author_name" id="authorName" placeholder="اسم الكاتب الظاهر" required>
+
+        <div class="mini-grid">
+          <label>
+            <span>التصنيف الأساسي</span>
+            <select name="genre" required>
+              <option value="">اختر تصنيفًا</option>
+              <% categoryGroups.basic.forEach(item => { %>
+                <option value="<%= item %>"><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>العالم / النظام</span>
+            <select name="world" required>
+              <option value="">اختر عالمًا</option>
+              <% categoryGroups.worlds.forEach(item => { %>
+                <option value="<%= item %>"><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>حالة الرواية</span>
+            <select name="status" required>
+              <% categoryGroups.status.forEach(item => { %>
+                <option value="<%= item %>" <%= item === 'مستمرة' ? 'selected' : '' %>><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span>الوسوم المشهورة</span>
+          <div class="chip-grid">
+            <% categoryGroups.popularTags.forEach(item => { %>
+              <label class="chip-check"><input type="checkbox" name="tags" value="<%= item %>"> <span><%= item %></span></label>
+            <% }) %>
+          </div>
+        </label>
+
+        <input type="text" name="cover_image" placeholder="رابط صورة الغلاف">
         <button type="submit" class="submit-btn">إنشاء الرواية ✨</button>
       </form>
     </section>
 
-    <section>
+    <section style="margin-bottom:2.5rem;">
       <h2 class="section-title">📚 كل الروايات</h2>
       <% if (novels && novels.length) { %>
         <div class="novels-list">
           <% novels.forEach(n => { %>
-            <div class="novel-list-item">
+            <div class="novel-list-item admin-list">
               <span>📖</span>
               <div>
                 <a href="/novel/<%= n.id %>"><%= n.title %></a>
-                <small style="color:var(--text-muted);margin-right:8px;">— <%= n.users ? n.users.username : 'بدون مؤلف' %></small>
+                <div class="list-meta">
+                  <span>✍️ <%= n.author_display %></span>
+                  <% if (n.author_uuid) { %><span class="mini-pill">UUID: <%= n.author_uuid %></span><% } %>
+                  <% if (n.status) { %><span class="mini-pill status-pill"><%= n.status %></span><% } %>
+                  <% if (n.genre) { %><span class="mini-pill"><%= n.genre %></span><% } %>
+                  <% if (n.world) { %><span class="mini-pill"><%= n.world %></span><% } %>
+                </div>
               </div>
             </div>
           <% }); %>
@@ -45,6 +122,50 @@
         </div>
       <% } %>
     </section>
+
+    <% if (users && users.length) { %>
+    <section>
+      <h2 class="section-title">🧠 أدوات المطور</h2>
+      <div class="developer-panel">
+        <div class="developer-card">
+          <h3>تعديل الرتب</h3>
+          <form action="/dev/user-role" method="POST" class="form-inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label>
+              <span>المستخدم</span>
+              <select name="user_id" required>
+                <option value="">اختر مستخدمًا</option>
+                <% users.forEach(u => { %>
+                  <option value="<%= u.id %>"><%= u.username %> · <%= u.role %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label>
+              <span>الرتبة</span>
+              <select name="role" required>
+                <% ['عضو','مؤلف','مؤلف_أسطوري','مشرف','مطور'].forEach(role => { %>
+                  <option value="<%= role %>"><%= role %></option>
+                <% }) %>
+              </select>
+            </label>
+            <button type="submit" class="submit-btn">حفظ</button>
+          </form>
+        </div>
+
+        <div class="developer-card">
+          <h3>أحدث المستخدمين</h3>
+          <div class="dev-user-list">
+            <% users.slice(0, 12).forEach(u => { %>
+              <div class="dev-user-item">
+                <strong><%= u.username %></strong>
+                <span><%= u.role %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+    <% } %>
   </main>
 
   <footer>

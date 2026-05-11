@@ -1,7 +1,5 @@
-<!-- ===== Sidebar Overlay ===== -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
 <!-- ===== Sidebar ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق القائمة">✕</button>
@@ -9,18 +7,13 @@
 
   <% if (user) { %>
   <div class="sidebar-user">
-    <img
-      class="sidebar-avatar"
-      src="https://cdn.discordapp.com/avatars/<%= user.discord_id %>/<%= user.avatar %>.png?size=128"
-      onerror="this.src='/logo.png'"
-      alt="<%= user.username %>"
-    />
+    <img class="sidebar-avatar" src="/logo.png" alt="<%= siteName %>" />
     <span class="sidebar-username"><%= user.username %></span>
     <span class="sidebar-role"><%= user.role %></span>
   </div>
   <% } else { %>
   <div class="sidebar-user">
-    <div class="sidebar-avatar" style="background:var(--primary-dim);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">👤</div>
+    <img class="sidebar-avatar" src="/logo.png" alt="<%= siteName %>" />
     <span class="sidebar-username">زائر</span>
     <span class="sidebar-role">غير مسجّل</span>
   </div>
@@ -51,7 +44,6 @@
   </div>
 </aside>
 
-<!-- ===== Header ===== -->
 <header>
   <a href="/" class="logo">
     <img src="/logo.png" alt="Echo Memories">

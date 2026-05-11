@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Echo Memories · صدى الذكريات</title>
-  <meta name="description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <title><%= siteName %> · صدى الذكريات</title>
+  <meta name="description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وابحث بالتصنيفات.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="<%= siteUrl %>/">
   <link rel="icon" type="image/png" href="/logo.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
-  <meta property="og:title" content="Echo Memories · صدى الذكريات">
-  <meta property="og:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <meta property="og:title" content="<%= siteName %> · صدى الذكريات">
+  <meta property="og:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وابحث بالتصنيفات.">
   <meta property="og:url" content="<%= siteUrl %>/">
   <meta property="og:locale" content="ar_SA">
   <meta property="og:image" content="<%= siteUrl %>/logo.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Echo Memories · صدى الذكريات">
-  <meta name="twitter:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وعِش القصة.">
+  <meta name="twitter:title" content="<%= siteName %> · صدى الذكريات">
+  <meta name="twitter:description" content="منصة نشر روايات عربية أصلية. اقرأ، علّق، وابحث بالتصنيفات.">
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
@@ -26,28 +26,92 @@
   <main>
     <section class="hero" id="hero">
       <h1 class="hero-title">صدى الذكريات 📖</h1>
-      <p class="hero-sub">منصة تابعة لسيرفر صدى الذكريات</p>
-      <a href="#novels" class="hero-cta">✨ ابدأ القراءة</a>
+      <p class="hero-sub">ابحث بالتصنيف، اقرأ مباشرة، وتابع الروايات على مزاجك.</p>
+      <a href="#novels" class="hero-cta">✨ ابدأ الاستكشاف</a>
+    </section>
+
+    <section class="search-panel" aria-label="البحث والتصنيفات">
+      <form method="GET" action="/" class="filter-form">
+        <div class="filter-row">
+          <input type="text" name="q" value="<%= filters.q %>" placeholder="ابحث عن رواية أو مؤلف أو وسم" class="filter-input">
+        </div>
+
+        <div class="filter-grid">
+          <label>
+            <span>التصنيف الأساسي</span>
+            <select name="genre">
+              <option value="الكل" <%= filters.genre === 'الكل' ? 'selected' : '' %>>الكل</option>
+              <% categoryGroups.basic.forEach(item => { %>
+                <option value="<%= item %>" <%= filters.genre === item ? 'selected' : '' %>><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label>
+            <span>العالم / النظام</span>
+            <select name="world">
+              <option value="الكل" <%= filters.world === 'الكل' ? 'selected' : '' %>>الكل</option>
+              <% categoryGroups.worlds.forEach(item => { %>
+                <option value="<%= item %>" <%= filters.world === item ? 'selected' : '' %>><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label>
+            <span>وسم مشهور</span>
+            <select name="tag">
+              <option value="الكل" <%= filters.tag === 'الكل' ? 'selected' : '' %>>الكل</option>
+              <% categoryGroups.popularTags.forEach(item => { %>
+                <option value="<%= item %>" <%= filters.tag === item ? 'selected' : '' %>><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label>
+            <span>حالة الرواية</span>
+            <select name="status">
+              <option value="الكل" <%= filters.status === 'الكل' ? 'selected' : '' %>>الكل</option>
+              <% categoryGroups.status.forEach(item => { %>
+                <option value="<%= item %>" <%= filters.status === item ? 'selected' : '' %>><%= item %></option>
+              <% }) %>
+            </select>
+          </label>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="submit-btn">بحث</button>
+          <a href="/" class="ghost-btn">إعادة ضبط</a>
+        </div>
+      </form>
     </section>
 
     <section id="novels">
-      <h2 class="section-title">📚 أحدث الروايات</h2>
+      <div class="section-head">
+        <h2 class="section-title">📚 أحدث الروايات</h2>
+        <span class="section-count"><%= allNovelsCount %> رواية</span>
+      </div>
+
       <div class="novels-grid">
         <% if (novels && novels.length) { %>
           <% novels.forEach((novel, i) => { %>
             <a href="/novel/<%= novel.id %>" class="novel-card"
-               style="background-image:url('<%= novel.cover_image || '/default-cover.jpg' %>');animation-delay:<%= i * 0.08 %>s">
+               style="background-image:url('<%= novel.cover_image || defaultCover %>');animation-delay:<%= i * 0.08 %>s">
               <div class="card-body">
+                <div class="card-tags">
+                  <% if (novel.status) { %><span class="mini-pill status-pill"><%= novel.status %></span><% } %>
+                  <% if (novel.genre) { %><span class="mini-pill"><%= novel.genre %></span><% } %>
+                </div>
                 <h2><%= novel.title %></h2>
-                <p class="author">✍️ <%= novel.users ? novel.users.username : 'مجهول' %></p>
-                <p class="chapter-count">📖 <%= novel.chapters ? novel.chapters.length : 0 %> فصول</p>
+                <p class="author">✍️ <%= novel.author_display %></p>
+                <p class="meta-line">📖 <%= novel.chapter_count %> فصول</p>
+                <% if (novel.world) { %><p class="meta-line">✨ <%= novel.world %></p><% } %>
               </div>
             </a>
           <% }); %>
         <% } else { %>
           <div class="empty-state">
             <span class="empty-icon">🌸</span>
-            <p>ما في روايات بعد — كن أول من يكتب!</p>
+            <p>ما لقينا نتائج هنا — جرّب تصنيف مختلف.</p>
           </div>
         <% } %>
       </div>
@@ -60,7 +124,6 @@
   </footer>
 
   <button class="back-top" id="backTop" aria-label="العودة لأعلى">↑</button>
-
   <script src="/script.js?v=<%= assetVersion %>"></script>
 </body>
 </html>

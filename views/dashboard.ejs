@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحتي · Echo Memories</title>
+  <title>لوحتي · <%= siteName %></title>
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
   <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
   <%- include('header') %>
   <main>
-    <h1>📋 لوحتي</h1>
+    <div class="section-head">
+      <h1>📋 لوحتي</h1>
+      <span class="section-count"><%= novels.length %> رواية</span>
+    </div>
 
     <section style="margin-bottom:2.5rem;">
       <h2 class="section-title">📚 رواياتي</h2>
@@ -19,7 +22,14 @@
           <% novels.forEach(n => { %>
             <div class="novel-list-item">
               <span>📖</span>
-              <a href="/novel/<%= n.id %>"><%= n.title %></a>
+              <div>
+                <a href="/novel/<%= n.id %>"><%= n.title %></a>
+                <div class="list-meta">
+                  <span><%= n.author_display %></span>
+                  <% if (n.status) { %><span class="mini-pill status-pill"><%= n.status %></span><% } %>
+                  <% if (n.genre) { %><span class="mini-pill"><%= n.genre %></span><% } %>
+                </div>
+              </div>
             </div>
           <% }); %>
         </div>
@@ -35,7 +45,15 @@
       <h2 class="section-title">✍️ إضافة فصل جديد</h2>
       <form action="/chapter/new" method="POST" class="form-card">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <input type="number" name="novel_id" placeholder="معرف الرواية" required min="1">
+        <label>
+          <span>الرواية</span>
+          <select name="novel_id" required>
+            <option value="">اختر رواية</option>
+            <% novels.forEach(n => { %>
+              <option value="<%= n.id %>"><%= n.title %></option>
+            <% }) %>
+          </select>
+        </label>
         <input type="number" name="chapter_number" placeholder="رقم الفصل" required min="1">
         <input type="text" name="title" placeholder="عنوان الفصل" required maxlength="200">
         <textarea name="content" placeholder="اكتب الفصل هنا…" rows="12" required></textarea>

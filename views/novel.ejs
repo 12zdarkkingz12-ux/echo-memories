@@ -3,92 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= novel.title %> · Echo Memories</title>
-  <meta name="description" content="اقرأ رواية <%= novel.title %> على Echo Memories · صدى الذكريات">
+  <title><%= novel.title %> · <%= siteName %></title>
+  <meta name="description" content="اقرأ رواية <%= novel.title %> على <%= siteName %>">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="<%= siteUrl %>/novel/<%= novel.id %>">
   <link rel="icon" type="image/png" href="/logo.png">
   <meta property="og:type" content="book">
   <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
-  <meta property="og:title" content="<%= novel.title %> · Echo Memories">
-  <meta property="og:description" content="اقرأ رواية <%= novel.title %> على Echo Memories">
+  <meta property="og:title" content="<%= novel.title %> · <%= siteName %>">
+  <meta property="og:description" content="اقرأ رواية <%= novel.title %> على <%= siteName %>">
   <meta property="og:url" content="<%= siteUrl %>/novel/<%= novel.id %>">
   <meta property="og:locale" content="ar_SA">
   <% if (novel.cover_image) { %>
   <meta property="og:image" content="<%= novel.cover_image %>">
   <% } %>
   <meta name="twitter:card" content="<%= novel.cover_image ? 'summary_large_image' : 'summary' %>">
-  <meta name="twitter:title" content="<%= novel.title %> · Echo Memories">
+  <meta name="twitter:title" content="<%= novel.title %> · <%= siteName %>">
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
 <body>
   <%- include('header') %>
 
-  <!-- Banner -->
-  <div class="novel-banner" style="background-image:url('<%= novel.cover_image || '/default-cover.jpg' %>')">
+  <div class="novel-banner" style="background-image:url('<%= novel.cover_image || defaultCover %>')">
     <div class="novel-banner-content">
-      <h1><%= novel.title %></h1>
+      <div class="banner-top">
+        <h1><%= novel.title %></h1>
+        <% if (novel.status) { %><span class="status-badge"><%= novel.status %></span><% } %>
+      </div>
       <div class="novel-meta">
-        <span>✍️ <%= novel.users ? novel.users.username : 'مؤلف' %></span>
-        <span>📂 <%= novel.category || 'بدون تصنيف' %></span>
+        <span>✍️ <%= novel.author_display %></span>
+        <% if (novel.genre) { %><span>📂 <%= novel.genre %></span><% } %>
+        <% if (novel.world) { %><span>🌍 <%= novel.world %></span><% } %>
         <span>📖 <%= chapters ? chapters.length : 0 %> فصول</span>
       </div>
+      <% if (novel.tags && novel.tags.length) { %>
+      <div class="tag-row">
+        <% novel.tags.forEach(tag => { %><span class="mini-pill"><%= tag %></span><% }) %>
+      </div>
+      <% } %>
     </div>
   </div>
 
   <main>
-    <!-- Chapters -->
-    <div class="chapters-list">
-      <h2 class="section-title">📑 الفصول</h2>
-      <% if (chapters && chapters.length) { %>
-        <div class="chapters-grid">
-          <% chapters.forEach((ch, i) => { %>
-            <a href="/read/<%= novel.id %>/<%= ch.id %>" class="chapter-card" style="animation-delay:<%= i * 0.06 %>s">
-              <div class="chapter-num"><%= ch.chapter_number %></div>
-              <span class="chapter-title"><%= ch.title %></span>
-            </a>
-          <% }); %>
+    <div class="novel-layout">
+      <section class="novel-main">
+        <div class="chapters-list">
+          <div class="section-head">
+            <h2 class="section-title">📑 الفصول</h2>
+            <span class="section-count"><%= allChaptersCount %> فصل</span>
+          </div>
+          <% if (chapters && chapters.length) { %>
+            <div class="chapters-grid">
+              <% chapters.forEach((ch, i) => { %>
+                <a href="/read/<%= novel.id %>/<%= ch.id %>" class="chapter-card" style="animation-delay:<%= i * 0.06 %>s">
+                  <div class="chapter-num"><%= ch.chapter_number %></div>
+                  <span class="chapter-title"><%= ch.title %></span>
+                </a>
+              <% }); %>
+            </div>
+            <% if ((!user || user.role === 'ضيف') && allChaptersCount > 4) { %>
+              <div class="lock-notice">🔒 أول 4 فصول مجانية — سجّل دخولك لتكمل القراءة وتعلّق</div>
+            <% } %>
+          <% } else { %>
+            <div class="empty-state">
+              <span class="empty-icon">🌙</span>
+              <p>ما نزلت فصول بعد… ربما غداً</p>
+            </div>
+          <% } %>
         </div>
-        <% if ((!user || user.role === 'ضيف') && allChaptersCount > 4) { %>
-          <div class="lock-notice">🔒 أول 4 فصول مجانية — سجّل دخولك لتكمل القراءة وتعلّق</div>
-        <% } %>
-      <% } else { %>
-        <div class="empty-state">
-          <span class="empty-icon">🌙</span>
-          <p>ما نزلت فصول بعد… ربما غداً</p>
+      </section>
+
+      <aside class="novel-side">
+        <div class="info-card">
+          <h3>معلومات الرواية</h3>
+          <div class="info-list">
+            <div><span>الكاتب</span><strong><%= novel.author_display %></strong></div>
+            <% if (novel.author_uuid) { %><div><span>UUID</span><strong><%= novel.author_uuid %></strong></div><% } %>
+            <div><span>الحالة</span><strong><%= novel.status || 'مستمرة' %></strong></div>
+            <div><span>التصنيف</span><strong><%= novel.genre || 'بدون' %></strong></div>
+            <div><span>العالم</span><strong><%= novel.world || 'بدون' %></strong></div>
+          </div>
         </div>
-      <% } %>
+      </aside>
     </div>
 
-    <!-- Comments -->
-    <div class="comments-section">
-      <h2 class="section-title">💬 التعليقات</h2>
+    <section class="comments-section" id="comments">
+      <div class="section-head">
+        <h2 class="section-title">💬 التعليقات</h2>
+        <span class="section-count"><%= comments.length %> تعليق</span>
+      </div>
       <% if (user) { %>
         <div class="comment-form">
-          <form action="/comment" method="POST">
+          <form action="/comment" method="POST" data-comment-form data-comment-target="novel" data-comment-target-id="<%= novel.id %>">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="target_type" value="novel">
             <input type="hidden" name="target_id" value="<%= novel.id %>">
+            <input type="hidden" name="return_to" value="<%= currentPath %>">
             <textarea name="content" placeholder="شاركنا رأيك في الرواية…" maxlength="2000"></textarea>
             <button type="submit" class="submit-btn">إرسال 📨</button>
           </form>
         </div>
       <% } else { %>
-        <p style="color:var(--text-muted);margin-bottom:1.5rem;">سجّل دخولك عشان تشاركنا رأيك في الرواية.</p>
+        <p class="muted-text">سجّل دخولك عشان تشاركنا رأيك في الرواية.</p>
       <% } %>
-      <div class="old-comments">
+      <div class="old-comments comments-list" data-comment-list>
         <% if (comments && comments.length) { %>
           <% comments.forEach((c, i) => { %>
             <div class="one-comment" style="animation-delay:<%= i * 0.07 %>s">
               <div class="comment-avatar">
-                <% if (c.users && c.users.discord_id && c.users.avatar) { %>
-                  <img src="https://cdn.discordapp.com/avatars/<%= c.users.discord_id %>/<%= c.users.avatar %>.png?size=64" onerror="this.parentElement.textContent='👤'" alt="">
+                <% if (c.users && c.users.avatar) { %>
+                  <img src="<%= c.users.avatar %>" onerror="this.src='/logo.png'" alt="">
                 <% } else { %>👤<% } %>
               </div>
               <div class="comment-body">
                 <strong><%= c.users ? c.users.username : 'مجهول' %></strong>
                 <span class="comment-date"><%= new Date(c.created_at).toLocaleString('ar') %></span>
-                <% if (c.first_comment_badge) { %><span class="first-comment-badge">✦</span><% } %>
                 <p><%= c.content %></p>
                 <% if (user && (user.role === 'مطور' || user.role === 'مشرف' || user.role === 'مؤلف_أسطوري')) { %>
                   <div class="comment-actions">
@@ -102,10 +131,10 @@
             </div>
           <% }); %>
         <% } else { %>
-          <p style="color:var(--text-muted)">ولا تعليق… كن أول من يكتب ✍️</p>
+          <p class="muted-text" data-empty-comments>ولا تعليق… كن أول من يكتب ✍️</p>
         <% } %>
       </div>
-    </div>
+    </section>
   </main>
 
   <footer>

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= chapter.title %> · Echo Memories</title>
-  <meta name="description" content="اقرأ الفصل <%= chapter.chapter_number %>: <%= chapter.title %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %> على Echo Memories">
+  <title><%= chapter.title %> · <%= siteName %></title>
+  <meta name="description" content="اقرأ الفصل <%= chapter.chapter_number %>: <%= chapter.title %><%= chapter.novels ? ' من رواية ' + chapter.novels.title : '' %> على <%= siteName %>">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
   <link rel="icon" type="image/png" href="/logo.png">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Echo Memories · صدى الذكريات">
-  <meta property="og:title" content="<%= chapter.title %> · Echo Memories">
+  <meta property="og:title" content="<%= chapter.title %> · <%= siteName %>">
   <meta property="og:url" content="<%= siteUrl %>/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= chapter.id %>">
   <link rel="stylesheet" href="/style.css?v=<%= assetVersion %>">
 </head>
@@ -25,16 +25,20 @@
         <% if (chapter.novels) { %> · <a href="/novel/<%= chapter.novels.id %>"><%= chapter.novels.title %></a><% } %>
       </p>
 
+      <div class="chapter-meta-row">
+        <% if (chapter.novels && chapter.novels.status) { %><span class="mini-pill status-pill"><%= chapter.novels.status %></span><% } %>
+        <% if (chapter.novels && chapter.novels.genre) { %><span class="mini-pill"><%= chapter.novels.genre %></span><% } %>
+        <% if (chapter.novels && chapter.novels.world) { %><span class="mini-pill"><%= chapter.novels.world %></span><% } %>
+      </div>
+
       <div class="chapter-content" id="chapterContent"><%- safeContent %></div>
 
-      <!-- Font Slider -->
       <div class="font-control">
         <label for="fontSlider">حجم الخط</label>
         <input type="range" id="fontSlider" min="13" max="32" value="18" step="1">
         <span class="font-size-display" id="fontDisplay">18</span>
       </div>
 
-      <!-- Nav -->
       <div class="chapter-nav">
         <% if (prevChapter) { %>
           <a href="/read/<%= chapter.novels ? chapter.novels.id : '' %>/<%= prevChapter.id %>" class="nav-btn">← الفصل السابق</a>
@@ -52,29 +56,32 @@
       </div>
     </div>
 
-    <!-- Comments -->
-    <div class="comments-section" style="max-width:780px;margin:0 auto;">
-      <h2 class="section-title">💬 التعليقات</h2>
+    <section class="comments-section" id="comments" style="max-width:780px;margin:0 auto;">
+      <div class="section-head">
+        <h2 class="section-title">💬 التعليقات</h2>
+        <span class="section-count"><%= comments.length %> تعليق</span>
+      </div>
       <% if (user) { %>
         <div class="comment-form">
-          <form action="/comment" method="POST">
+          <form action="/comment" method="POST" data-comment-form data-comment-target="chapter" data-comment-target-id="<%= chapter.id %>">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="target_type" value="chapter">
             <input type="hidden" name="target_id" value="<%= chapter.id %>">
+            <input type="hidden" name="return_to" value="<%= currentPath %>">
             <textarea name="content" placeholder="اكتب شي… حتى لو كلمة 💬" maxlength="2000"></textarea>
             <button type="submit" class="submit-btn">إرسال 📨</button>
           </form>
         </div>
       <% } else { %>
-        <p style="color:var(--text-muted);margin-bottom:1.5rem;">سجّل دخولك عشان تشاركنا رأيك.</p>
+        <p class="muted-text">سجّل دخولك عشان تشاركنا رأيك.</p>
       <% } %>
-      <div class="old-comments">
+      <div class="old-comments comments-list" data-comment-list>
         <% if (comments && comments.length) { %>
           <% comments.forEach((c, i) => { %>
             <div class="one-comment" style="animation-delay:<%= i * 0.07 %>s">
               <div class="comment-avatar">
-                <% if (c.users && c.users.discord_id && c.users.avatar) { %>
-                  <img src="https://cdn.discordapp.com/avatars/<%= c.users.discord_id %>/<%= c.users.avatar %>.png?size=64" onerror="this.parentElement.textContent='👤'" alt="">
+                <% if (c.users && c.users.avatar) { %>
+                  <img src="<%= c.users.avatar %>" onerror="this.src='/logo.png'" alt="">
                 <% } else { %>👤<% } %>
               </div>
               <div class="comment-body">
@@ -93,10 +100,10 @@
             </div>
           <% }); %>
         <% } else { %>
-          <p style="color:var(--text-muted)">ولا تعليق… كن أول من يكتب ✍️</p>
+          <p class="muted-text" data-empty-comments>ولا تعليق… كن أول من يكتب ✍️</p>
         <% } %>
       </div>
-    </div>
+    </section>
   </main>
 
   <footer>
