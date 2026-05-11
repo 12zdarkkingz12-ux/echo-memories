@@ -10,10 +10,15 @@ const sanitizeHtml = require('sanitize-html');
 
 const app = express();
 
+// ========== [BUG FIX #1] Trust Proxy ==========
+// Render يشتغل وراء reverse proxy. بدون هذا، الكوكيز الـ secure ما تنحط،
+// وتسجيل الدخول يفشل تماماً في production.
+app.set('trust proxy', 1);
+
 // ========== Supabase ==========
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-// ========== أمان أساسي بدون helmet ==========
+// ========== أمان أساسي ==========
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -21,10 +26,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// ========== Rate Limiter ==========
+// ========== [BUG FIX #2] Rate Limiter ==========
+// في express-rate-limit v8، الخيار `max` أُزيل وصار اسمه `limit`.
+// استخدام `max` في v8 يجعل الـ rate limiter بدون حد فعلي.
 app.use(rateLimit({
   windowMs: 60 * 1000,
-  max: 200,
+  limit: 200,
   message: 'تجاوزت الحد.',
 }));
 
@@ -135,8 +142,12 @@ passport.deserializeUser(async (id, done) => {
 
 app.get('/', async (req, res, next) => {
   try {
+    // [BUG FIX #3] إضافة chapters(id) عشان نحسب عدد الفصول في الـ view.
+    // كان: .select('*, users(username)') — novel.chapters كان undefined دايماً فيطلع 0.
     const { data: novels, error } = await supabase
-      .from('novels').select('*, users(username)').order('created_at', { ascending: false });
+      .from('novels')
+      .select('*, users(username), chapters(id)')
+      .order('created_at', { ascending: false });
     if (error) throw error;
     res.render('index', { novels: novels || [] });
   } catch (err) {
