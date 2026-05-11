@@ -9,11 +9,18 @@ CREATE TABLE users (
 );
 
 -- 2. جدول الروايات
+-- author_id يربط بمؤلف موجود داخل users
+-- author_uuid يسمح بحفظ UUID يدوي حتى لو ما كان مربوطًا بجدول users
 CREATE TABLE novels (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
-  author_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  category TEXT,
+  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  author_uuid TEXT,
+  author_name TEXT NOT NULL,
+  genre TEXT,
+  world TEXT,
+  tags TEXT[] DEFAULT '{}',
+  status TEXT DEFAULT 'مستمرة' CHECK (status IN ('مستمرة', 'مكتملة', 'متوقفة')),
   cover_image TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -42,17 +49,13 @@ CREATE TABLE comments (
 );
 
 -- 5. دالة تلقائية لحذف التعليقات بعد 3 أشهر (تنفذ مرة كل يوم عبر pg_cron أو يدوي)
--- نصنع إجراءً مخزناً
 CREATE OR REPLACE FUNCTION delete_old_comments()
 RETURNS void AS $$
 BEGIN
-  -- حذف التعليقات التي مضى عليها 3 أشهر وأكثر، مع إبقاء سلة مهملات 5 أيام للمطور
-  -- أولاً: ننقل التعليقات القديمة إلى جدول أرشيف (اختياري) أو نحذفها نهائياً
   DELETE FROM comments
   WHERE is_deleted = TRUE 
     AND deleted_at < NOW() - INTERVAL '5 days';
-    
-  -- ثانياً: نضع علامة حذف على التعليقات القديمة جداً (أكثر من 3 أشهر)
+
   UPDATE comments
   SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = NULL
   WHERE created_at < NOW() - INTERVAL '3 months'
