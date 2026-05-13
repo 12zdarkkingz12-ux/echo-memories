@@ -1,23 +1,25 @@
-<!-- ===== Sidebar ===== -->
+<canvas id="starCanvas" aria-hidden="true"></canvas>
+
+<!-- ===== Sidebar Overlay ===== -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
-<aside class="sidebar" id="sidebar">
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="القائمة الجانبية">
   <div class="sidebar-header">
     <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق القائمة">✕</button>
   </div>
 
-  <% if (user) { %>
   <div class="sidebar-user">
-    <img class="sidebar-avatar" src="/logo.png" alt="<%= siteName %>" />
-    <span class="sidebar-username"><%= user.username %></span>
-    <span class="sidebar-role"><%= user.role %></span>
+    <% if (user) { %>
+      <img class="sidebar-avatar" src="<%= user.avatar || '/logo.png' %>" alt="<%= user.username %>" onerror="this.src='/logo.png'" />
+      <span class="sidebar-username"><%= user.username %></span>
+      <span class="sidebar-role"><%= user.role %></span>
+    <% } else { %>
+      <img class="sidebar-avatar" src="/logo.png" alt="<%= siteName %>" />
+      <span class="sidebar-username">زائر</span>
+      <span class="sidebar-role">غير مسجّل</span>
+    <% } %>
   </div>
-  <% } else { %>
-  <div class="sidebar-user">
-    <img class="sidebar-avatar" src="/logo.png" alt="<%= siteName %>" />
-    <span class="sidebar-username">زائر</span>
-    <span class="sidebar-role">غير مسجّل</span>
-  </div>
-  <% } %>
 
   <nav class="sidebar-nav">
     <a href="/"><span class="nav-icon">🏠</span> الرئيسية</a>
@@ -44,12 +46,13 @@
   </div>
 </aside>
 
+<!-- ===== Header ===== -->
 <header>
-  <a href="/" class="logo">
-    <img src="/logo.png" alt="Echo Memories">
+  <a href="/" class="logo" aria-label="الرئيسية">
+    <img src="/logo.png" alt="Echo Memories" loading="eager">
     <span class="logo-text">Echo Memories</span>
   </a>
   <div class="header-actions">
-    <button class="menu-btn" id="menuBtn" aria-label="فتح القائمة">☰</button>
+    <button class="menu-btn" id="menuBtn" aria-label="فتح القائمة" aria-expanded="false">☰</button>
   </div>
 </header>

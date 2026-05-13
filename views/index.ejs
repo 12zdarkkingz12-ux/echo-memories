@@ -25,15 +25,21 @@
 
   <main>
     <section class="hero" id="hero">
-      <h1 class="hero-title">صدى الذكريات 📖</h1>
-      <p class="hero-sub">ابحث بالتصنيف، اقرأ مباشرة، وتابع الروايات على مزاجك.</p>
+      <div class="hero-ring"></div>
+      <div class="hero-ring r2"></div>
+      <p class="hero-eyebrow">✦ منصة الروايات العربية</p>
+      <h1 class="hero-title">صدى الذكريات</h1>
+      <p class="hero-sub">مكان تجتمع فيه الروايات والقرّاء — ابحث، اقرأ، وعلّق على مزاجك.</p>
       <a href="#novels" class="hero-cta">✨ ابدأ الاستكشاف</a>
     </section>
 
     <section class="search-panel" aria-label="البحث والتصنيفات">
       <form method="GET" action="/" class="filter-form">
         <div class="filter-row">
-          <input type="text" name="q" value="<%= filters.q %>" placeholder="ابحث عن رواية أو مؤلف أو وسم" class="filter-input">
+          <div class="search-wrapper" style="width:100%">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" value="<%= filters.q %>" placeholder="ابحث عن رواية أو مؤلف أو وسم..." class="filter-input">
+          </div>
         </div>
 
         <div class="filter-grid">
@@ -96,6 +102,7 @@
           <% novels.forEach((novel, i) => { %>
             <a href="/novel/<%= novel.id %>" class="novel-card"
                style="background-image:url('<%= novel.cover_image || defaultCover %>');animation-delay:<%= i * 0.08 %>s">
+              <div class="card-shine"></div>
               <div class="card-body">
                 <div class="card-tags">
                   <% if (novel.status) { %><span class="mini-pill status-pill"><%= novel.status %></span><% } %>
@@ -120,7 +127,7 @@
 
   <footer>
     <p>موقع تابع لسيرفر <a href="<%= discordServerUrl %>" target="_blank" rel="noopener">صدى الذكريات</a></p>
-    <p>صنع <span style="color:var(--primary)">Dark</span></p>
+    <p>صنع بـ <span class="footer-heart">♥</span> من قبل <span style="background:linear-gradient(135deg,#c084fc,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700">Dark</span></p>
   </footer>
 
   <button class="back-top" id="backTop" aria-label="العودة لأعلى">↑</button>
